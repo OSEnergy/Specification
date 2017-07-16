@@ -1,6 +1,6 @@
 
  
-#OSEspecificaiton
+# OSEspecificaiton
 ## 
 **OSEnergy _(Open Systems Energy)_** is an architectural specification who's aim is to provide a framework for the design, deployment, and operation of charging sources associated with a DC battery.  Allowing them to work together in a *'systems'* approach.
  
@@ -14,7 +14,7 @@ Licensing terms of OSEnergy is intended to support both commercial as well as op
  
  
 <br><br>
-##Architectural Goals
+## Architectural Goals
 The OSEnergy initiative has three primary goals in the installation and operation of a DC system:  **Protection, Optimization, Simplification.**     _Design Objectives_ are created to support each of these goals.  Goals, in priority order, are:
  
 1. Protection
