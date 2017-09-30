@@ -125,12 +125,29 @@ Once a device is acting as Battery Master and is transmitting DC Status4 message
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 0x1FEC9 - DC-Status 2 (Battery Temperature)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 0x1FEC8 - DC-Status 5 (Battery Voltage - higher precision then DC-Status 1)
 
+
 Note that this is not an restrictive list of messages which may originate from a Battery Master.   Depending on the capability of the Battery Master, other DC status messages may be sent (ala, SOC, SOH, etc from a proper BMS device)
 
-<br><br>
 
+<br><br>
 At startup a Battery Master will perform needed J1939 address claim procedures and start monitoring the CAN.   If another Battery Master is detected for the same Battery ID and which has higher priority the device will place its self into a dormant role and not transmit any battery DC status CAN messages.  One exception to this is if a PGN Request is received, then even a dormant Battery Master will reply with the requested messages.
 
+
+<br><br>
+####Special considerations for over-goal conditions. 
+A Battery Master is responsible for defining the boats of the battery, as well as sharing its current status.  In the case where a status exceeds the desired volts (example, battery voltage reaches and then exceeds its goal), the Battery Master should immediately send out the appropriate status massage (DC-Status 5 in this case).  Take note several messages have the option of higher priority and/or increased transmission frequency in the case of an over-goal / over-limit condition. (DC-Status 5 is again one example)
+
+In extreme cases, the Battery Master should send out DC Disconnect messages and take needed steps to isolate and protect the battery:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 0x1FED0 - DC Disconnect Status
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 0x1FECF - DC Disconnect Command
+
+
+
+
+
+
+<br><br>
 #### Power Reduction Options
 DC Status4 is the principal message needed to establish and retain a Battery Master role for a given battery ID.  In order to conserve power, a Battery Master may optionally monitor for the presence of a charging device before sending out the other DC Status messages.  The presence of Charger Status - 1FFC7h messages associated with the same battery ID and a charger state other then 1 (Do not charge) may be used to trigger the resumption of all required DC Status messages.  Battery Masters should also respond to individual requests for messages.
 
@@ -140,16 +157,24 @@ Charging Devices will utilize DC-Status4 to resolve which Battery Master to foll
 
 <br><br><br><br>
 ## Charging device (ChrDev)
-Charging devices supply energy to the battery, as well as support any concurrent house loads.  Charging Devices must look for a valid Battery Master to provide direction on the battery needs, only upon failing to recognize a valid Battery Master - Charging Devices may fall back to local decisions as best as their capability allows.  In addition, a Charging Device must communicate its status and utilization as well as monitor for other charging devices associated with the same battery.  Charging Devices must support the following:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 0x1FED0 - DC Disconnect Status  (Monitor for battery disconnect)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 0x1FECF - DC Disconnect Command
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 0x1FFC7 - Charger Status
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 0x1FF9D - Charger Status 2
-
+Charging devices supply energy to the battery, as well as support any concurrent house loads.  Charging Devices must look for a valid Battery Master to provide direction on the battery needs, only upon failing to recognize a valid Battery Master - Charging Devices may fall back to local decisions as best as their capability allows.  In addition, a Charging Device must communicate its status and utilization as well as monitor for other charging devices associated with the same battery.  Charging Devices must support and respond appropriately to the following:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 0x1FEC9 - DC-Status4  (Requested battery needs)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 0x1FED0 - DC Disconnect Status  (Monitor for battery disconnect)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 0x1FECF - DC Disconnect Command
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 0x1FFC7 - Charger Status
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. 0x1FF9D - Charger Status 2
 
 It is critical that all Charging Sources monitor for the DC disconnect messages and immediately stop charging in the event of a battery disconnect.
 
-Other PGNs as supported by Charging Devices may be supported, specifically those involved in the configuration of charging source.  Note that J1939 requires a device to reply NAK in the event it is sent a PGN which it does not support.
+Charging Devices may optionally take advantage of other DC status messages, such as:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6. 0x1FFFD - DC-Status 1 (Battery Current)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7. 0x1FEC9 - DC-Status 2 (Battery Temperature)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8. 0x1FEC8 - DC-Status 5 (Battery Voltage)
+The presence of the DC-Status 1, 2, and 5 may  be used as a validation criteria to help assure a fully capable device is assuming the role of Battery Master.
+
+
+Other PGNs as enabled by Charging Devices may be supported, specifically those involved in the configuration of charging source.  Note that J1939 requires a device to reply NAK in the event it is sent a PGN which it does not support.
+
 
 <br><br>
 #### Power Reduction Options
