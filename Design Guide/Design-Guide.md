@@ -1,6 +1,6 @@
 # OSEnergy Design Guide
 ##
-The OSEnergy architecture is designed to allow for distributed cooperation of DC charging sources meeting the needs of storage batteries and concurrent house loads.  
+The OSEnergy architecture is designed to allow for distributed cooperation of DC charging sources meeting the needs of storage batteries and concurrent house loads.
  
 This Design Guide covers the Architectural Philosophy of OSEnergy, leveraged standards, as well as details of the implementation of those standards.  Refer also to the `OSEnergy Programming Guide` for additional specifics around the API and required / optional capabilities of devices.
 
@@ -91,18 +91,15 @@ OSEnergy specification makes the following modifications to CiA-303:
 - Pin 4 (reserved) --> is used for a master GENERATOR ENABLE/STOP signal
 - Pin 3 (CAN_GND) and pin 7 (GND) should be tied together.
 
-CAN_V+ (pin 8) may be used in conjunction with GND and CAN_GND to power small devices attached to the OSEnergy network. Power draw should be limited to 50mA per device, and care must be taken to not over burden the entire system with too many parasitic powered devices.  Sourcing for CAN_V+ may be supplied by a device or through a dedicated power injector.  There may be more than one power source, and  blocking diodes on both CAN_V+ as well as GND/CAN_GND should be used in any device or power injector to prevent any current loops in the CAT-5 cabling. 
+CAN_V+ (pin 8) may be used in conjunction with GND and CAN_GND to power small devices attached to the OSEnergy network. Power draw should be limited to 175mA per device with the limit for all  self-powered devices not to exceed 350mA.  Care must be taken to not over burden the entire system with too many parasitic powered devices.  Sourcing for CAN_V+ may be supplied by a device or through a dedicated power injector.  There may be more than one power source, and blocking diodes on both CAN_V+ as well as GND/CAN_GND (or equivalent) should be used in any device or power injector to prevent any current loops in the CAT-5 cabling. 
   
  
- OSEnergy designates Pin 4 as a SFTY_STOP signal to enable as well as provide for emergency stopping of mechanical devices connected to the OSEnergy bus.  The prime example is the engine of a generator. SFTY_STOP (pin4) is a voltage level signal relative to GND/CAN_GND:
+ OSEnergy designates Pin 4 as a SFTY_STOP signal to enable as well as provide for emergency stopping of mechanical devices connected to the OSEnergy bus.  The prime example is the engine of a generator:
  
-- SFTY_STOP (pin 4)  ENABLE:    Voltage above 3v
-- SFTY_STOP (pin 4)  DISABLE:   Voltage below 1v
+- SFTY_STOP (pin 4)  ENABLE:    At GND/CAN_GND potential
+- SFTY_STOP (pin 4)  DISABLE:   Open
 
-Enable is a affirmative action, in that if no Enable voltage presented to SFTY_STOP, devices will be disabled. All OSEnergy devices which present a human safety risk from mechanical motion (such as generator’s engines) must recognize SFTY_STOP.
- 
- When sourcing the Enable voltage to SFTY_STOP, it should be supplied via a 10K to 100K resistor - often tied to CAN-V+.    Connecting SFTY_STOP to GND cause devices to be disabled.  A switch between SFTY_STOP and GND may be used to provide for emergency stop buttons, as well as local service lockouts.
- 
+To ENABLED, connect SFTY_STOP to GND/CAN_GND.  Voltage level when enabled should be under 1V, and the device should be prepared to handle up to 100mA of current.  When SFTY_STOP is disabled, Voc (Voltage-open) may be as high as 40v.  A switch, FET or transistor are some example ways to accomplish this.  The Blocking diodes should be put into place to prevent potential for current-loops in the SFTY_STOP  & GND/CAN_GND wires.  Enable is a affirmative action, in that if no Enable signal presented to SFTY_STOP, devices will be disabled. All OSEnergy devices which present a human safety risk from mechanical motion (such as generator’s engines) must recognize SFTY_STOP.
  
   
   <br><br>
