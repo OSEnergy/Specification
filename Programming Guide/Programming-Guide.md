@@ -2,8 +2,8 @@
 
 ##
 This document will assist in developing devices to participate in an OSEnergy compliant system.  Both Battery Masters and Charging Devices are covered:
-&nbsp;&nbsp;&nbsp;- Battery Master  (BatMan):  Coding needed to enable a node to function as the system wide conductor/coordinator
-&nbsp;&nbsp;&nbsp;- Charging Device (ChgDev):  Coding needed to allow a node to participate in a cooperative way for charging an associated battery.
+- Battery Master  (BatMan):  Coding needed to enable a node to function as the system wide conductor/coordinator
+- Charging Device (ChgDev):  Coding needed to allow a node to participate in a cooperative way for charging an associated battery.
 
 Please refer to the `OSEnergy Design Guide` for additional architectural details on how each type of device is utilized in a complete system.  Do note that a single device may provide for more then one OSEnergy role, example, an alternator regulator is a Charging Device, but may (if capable) also serve as a potential Battery Manager.
 
@@ -27,23 +27,25 @@ All common CAN conventions (including the use of all 1's to indicate a non-exist
  <br><br>
 ### J1939 and RV-C foundation
  The OSEnergy protocol is built upon the J1939 standard, specifically on the variant of J1939 as implemented in the RV-C standard  ([http://www.rv-c.com/?q=node/75](http://www.rv-c.com/?q=node/75).   (Relevant copy of this specification are located in the OSEnergy github repository)  It is recommended to review this document carefully.  At a minimum, OSEnergy devices must support the following DGNs/PGNs:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.  0xEA00 - Address Request
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.  0xEE00 - Address Clamed
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.  0xEA00 - DGN/PGN Request 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.  0xECFF - Multi-packet initiator
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5.  0xEBFF - Multi-packet subsequent packet
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6.  0xFEEB - Product identification message
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7.  0x1FECA - Operational Status and Diagnostics Message
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8.  0x1FED6 - Manufacturer-Specific ADDRESS_CLAIM Request
+
+1.  0xEA00 - Address Request
+2.  0xEE00 - Address Clamed
+3.  0xEA00 - DGN/PGN Request 
+4.  0xECFF - Multi-packet initiator
+5.  0xEBFF - Multi-packet subsequent packet
+6.  0xFEEB - Product identification message
+7.  0x1FECA - Operational Status and Diagnostics Message
+8.  0x1FED6 - Manufacturer-Specific ADDRESS_CLAIM Request
  
 Other DGNs / PGNs which are recommended to support include:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;9.  0xE800 - Acknowledgment xx
-&nbsp;&nbsp;&nbsp;&nbsp;10.  0x17E00 - Terminal (ASCII) messages
+
+9.  0xE800 - Acknowledgment xx
+10.  0x17E00 - Terminal (ASCII) messages
 
 
 <br><br>
-####DERIVATIONS FROM RV-C SPECIFICATION
- OSEnergy as currently implemented utilizes the open CAN standard RV-C for communication between devices.  DGN/PGN references are more completely described in the RV-C specification referenced above.
+#### DERIVATIONS FROM RV-C SPECIFICATION
+OSEnergy as currently implemented utilizes the open CAN standard RV-C for communication between devices.  DGN/PGN references are more completely described in the RV-C specification referenced above.
 
 There is one notable deviations to the RV-C specification:   ```Charger Type``` designation has been added to all the 'Charger' DGNs via the upper nibble of the existing Instance byte. (6.21.x in December 2015 release of RV-C spec).  This allows for a common approach to all charging sources, while being able to segregate the different type of chargers:
 
@@ -100,14 +102,16 @@ It is convention to utilize all 1's for a value to indicate it is not available 
 The Battery Master is responsible for determining the batteries needs and communicating those needs (as well as status) via the CAN for subsequent use by charging sources associated with the same battery ID.
 
 In addition to the common PGNs above, all BatMan devices must transmit the following DGNs/PGNs:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 0x1FEC9 - DC-Status4  (Requested battery needs)
+
+1. 0x1FEC9 - DC-Status4  (Requested battery needs)
 
 DC-Status4 is used to resolve which device is to be recognized as the Battery Master to be followed.  All devices should monitor for the presence of DC Status4 matching its battery ID.  The highest priority device transmitting DC Status4 for a given battery ID should be recognized as the Battery Master for that battery.  DC Status4 messages must be transmitted at least every 5000mS per the specification.  If a given node fails to transmit subsequent DC Status4 messages for two or more time slots (10,000mS) devices should look to resolve to a new Battery Master.
 
 Once a device is acting as Battery Master and is transmitting DC Status4 messages, it should begin to also transmit these other battery status messages:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 0x1FFFD - DC-Status 1 (Battery Current)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 0x1FEC9 - DC-Status 2 (Battery Temperature)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 0x1FEC8 - DC-Status 5 (Battery Voltage - higher precision then DC-Status 1)
+
+2. 0x1FFFD - DC-Status 1 (Battery Current)
+3. 0x1FEC9 - DC-Status 2 (Battery Temperature)
+4. 0x1FEC8 - DC-Status 5 (Battery Voltage - higher precision then DC-Status 1)
 
 
 Note that this is not an restrictive list of messages which may originate from a Battery Master.   Depending on the capability of the Battery Master, other DC status messages may be sent (ala, SOC, SOH, etc from a proper BMS device)
@@ -118,13 +122,13 @@ At startup a Battery Master will perform needed J1939 address claim procedures a
 
 
 <br><br>
-####Special considerations for over-goal conditions. 
+#### Special considerations for over-goal conditions. 
 A Battery Master is responsible for defining the needs of the battery, as well as sharing its current status.  In the case where a status exceeds the desired goal (example, battery voltage reaches and then exceeds its goal), the Battery Master should immediately send out the appropriate status massage (DC-Status 5 in this case).  Take note several messages have the option of higher priority and/or increased transmission frequency in the case of an over-goal / over-limit condition. (DC-Status 5 is again one example)
 
 In extreme cases, the Battery Master should send out DC Disconnect messages and take needed steps to isolate and protect the battery:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 0x1FED0 - DC Disconnect Status
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 0x1FECF - DC Disconnect Command
+- 0x1FED0 - DC Disconnect Status
+- 0x1FECF - DC Disconnect Command
 
 
 
@@ -142,18 +146,20 @@ Charging Devices will utilize DC-Status4 to resolve which Battery Master to foll
 <br><br><br><br>
 ## Charging device (ChrDev)
 Charging devices supply energy to the battery, as well as support any concurrent house loads.  Charging Devices must look for a valid Battery Master to provide direction on the battery needs, only upon failing to recognize a valid Battery Master - Charging Devices may fall back to local decisions as best as their capability allows.  In addition, a Charging Device must communicate its status and utilization as well as monitor for other charging devices associated with the same battery.  Charging Devices must support and respond appropriately to the following:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 0x1FEC9 - DC-Status4  (Requested battery needs)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 0x1FED0 - DC Disconnect Status  (Monitor for battery disconnect)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 0x1FECF - DC Disconnect Command
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 0x1FFC7 - Charger Status
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. 0x1FEA3 - Charger Status 2
+
+1. 0x1FEC9 - DC-Status4  (Requested battery needs)
+2. 0x1FED0 - DC Disconnect Status  (Monitor for battery disconnect)
+3. 0x1FECF - DC Disconnect Command
+4. 0x1FFC7 - Charger Status
+5. 0x1FEA3 - Charger Status 2
 
 It is critical that all Charging Sources monitor for the DC disconnect messages and immediately stop charging in the event of a battery disconnect.
 
 Charging Devices may optionally take advantage of other DC status messages, such as:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6. 0x1FFFD - DC-Status 1 (Battery Current)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7. 0x1FEC9 - DC-Status 2 (Battery Temperature)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8. 0x1FEC8 - DC-Status 5 (Battery Voltage)
+
+6. 0x1FFFD - DC-Status 1 (Battery Current)
+7. 0x1FEC9 - DC-Status 2 (Battery Temperature)
+8. 0x1FEC8 - DC-Status 5 (Battery Voltage)
 The presence of the DC-Status 1, 2, and 5 may  be used as a validation criteria to help assure a fully capable device is assuming the role of Battery Master.
 
 
@@ -193,7 +199,7 @@ The following are suggested critical timing values and timeouts, in mS.  These a
 
 
 <br><br>
-##Other CAN protocols (Raw J1939,  NMEA-2000^TM^, etc)
-OSEnery is based on the J1939 protocol.  J1939 is very common and widely adopted in the transportation sector.  Many diesel engines provide for J1939 defined messages to communicate their operations status.  Devices may optional be designed to receive these messages, an example an Alternator Regulator may utilize J1939 - PGN 61444  to pick up the engine RPMs.  NMEA2000^TM^ is another common CAN protocol built upon J1939, and OSEnergy devices may find value in providing CAN messages which support status outputs in a compatible form.  However one needs to take caution that there is no conflicts created by the different standards, and that the presence of more than one protocol on the same physical CAN bus does not cause unintended errors.  In an extreme case, a CAN bridge or router may be needed.
+## Other CAN protocols (Raw J1939,  NMEA-2000<sup>TM</sup>, etc)
+OSEnery is based on the J1939 protocol.  J1939 is very common and widely adopted in the transportation sector.  Many diesel engines provide for J1939 defined messages to communicate their operations status.  Devices may optional be designed to receive these messages, an example an Alternator Regulator may utilize J1939 - PGN 61444  to pick up the engine RPMs.  NMEA2000<sup>TM</sup> is another common CAN protocol built upon J1939, and OSEnergy devices may find value in providing CAN messages which support status outputs in a compatible form.  However one needs to take caution that there is no conflicts created by the different standards, and that the presence of more than one protocol on the same physical CAN bus does not cause unintended errors.  In an extreme case, a CAN bridge or router may be needed.
 
 
