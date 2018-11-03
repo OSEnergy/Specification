@@ -107,14 +107,23 @@ In addition to the common PGNs above, all BatMan devices must transmit the follo
 
 DC-Status4 is used to resolve which device is to be recognized as the Battery Master to be followed.  All devices should monitor for the presence of DC Status4 matching its battery ID.  The highest priority device transmitting DC Status4 for a given battery ID should be recognized as the Battery Master for that battery.  DC Status4 messages must be transmitted at least every 5000mS per the specification.  If a given node fails to transmit subsequent DC Status4 messages for two or more time slots (10,000mS) devices should look to resolve to a new Battery Master.
 
-Once a device is acting as Battery Master and is transmitting DC Status4 messages, it should begin to also transmit these other battery status messages:
+Once a device is acting as Battery Master and is transmitting DC Status4 messages, it *must* begin to also transmit these other battery status messages - even if the data transmitted contained No Content values (All 1's in value):
 
-2. 0x1FFFD - DC-Status 1 (Battery Current)
+2. 0x1FFFD - DC-Status 1 (Battery Voltage & Current)
 3. 0x1FEC9 - DC-Status 2 (Battery Temperature)
-4. 0x1FEC8 - DC-Status 5 (Battery Voltage - higher precision then DC-Status 1)
+
+The timely transmission of these three messages (DC-Status 1, 2, & 4) must be maintained in order for an Battery Master to continue to be recognized and its instructions followed.
 
 
-Note that this is not an restrictive list of messages which may originate from a Battery Master.   Depending on the capability of the Battery Master, other DC status messages may be sent (ala, SOC, SOH, etc from a proper BMS device)
+A Battery Master may also optionally transmit the following status information if it wishes to support Remote Battery Voltage Sensing; an installation technique which will help reduce cabling by allowing  remote sensing of battery date by  charging device vs. needing independent sensing wires.
+
+1. 0x1FEC8 - DC-Status 5 (Battery Voltage - higher precision then DC-Status 1)
+
+In order for a Charging Device to follow remote-sensing, a Battery Master **must** transmit DC-Status1, 2, and 5 in timely manner.  It is this way that a Battery Master indicates it truly has high accuracy sensing capability to allow for remote sensing.
+
+<br>
+
+This is not an restrictive list of messages which may originate from a Battery Master.   Depending on the capability of the Battery Master, other DC status messages may be sent (ala, SOC, SOH, etc from a proper BMS device)
 
 
 <br><br>
@@ -137,9 +146,13 @@ In extreme cases, the Battery Master should send out DC Disconnect messages and 
 
 <br><br>
 #### Power Reduction Options
-DC Status4 is the principal message needed to establish and retain a Battery Master role for a given battery ID.  In order to conserve power, a Battery Master may optionally monitor for the presence of a charging device before sending out the other DC Status messages.  The presence of Charger Status - 1FFC7h messages associated with the same battery ID and a charger state other then 1 (Do not charge) may be used to trigger the resumption of all required DC Status messages.  Battery Masters should also respond to individual requests for messages.
+DC Status4 is the principal message needed to establish and retain a Battery Master role for a given battery ID.  In order to conserve power, a Battery Master may optionally monitor for the presence of a charging device before sending out the other DC Status messages.  The presence of `Charger Status 2` (1FEA3h) messages associated with the same battery ID may be used to trigger the resumption of DC Status messages.
 
-Charging Devices will utilize DC-Status4 to resolve which Battery Master to follow, but will also require the presence of the other required DC-Status messages before validating a given Battery Master.
+Battery Masters should also respond to individual requests for messages, and specifically a request for `DC-Status4` (1FEC9h) which may be used by non-charging devices (for example, displays) to wake-up Battery Masters.
+ 
+ Once awakened by either the reception of `Charger Status 2` or a request for `DC Status4`,  Battery Masters should continue to remain active for a minimum of 60 seconds.
+
+Charging Devices will utilize `DC-Status4` (1FEC9h) to resolve which Battery Master to follow, but will also require the presence of the other required DC-Status messages before fully validating a given Battery Master.
 
 
 
