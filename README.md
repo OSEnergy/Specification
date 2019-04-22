@@ -1,4 +1,4 @@
-# OSEnergy Specificaiton
+# OSEnergy Specification
 ## 
 **OSEnergy _(Open Systems Energy)_** is an architectural specification who's aim is to provide a framework for the design, deployment, and operation of charging sources associated with a DC battery.  Allowing them to work together in a *'systems'* approach.
  

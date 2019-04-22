@@ -110,7 +110,7 @@ DC-Status4 is used to resolve which device is to be recognized as the Battery Ma
 Once a device is acting as Battery Master and is transmitting DC Status4 messages, it *must* begin to also transmit these other battery status messages - even if the data transmitted contained No Content values (All 1's in value):
 
 2. 0x1FFFD - DC-Status 1 (Battery Voltage & Current)
-3. 0x1FEC9 - DC-Status 2 (Battery Temperature)
+3. 0x1FFFC - DC-Status 2 (Battery Temperature)
 
 The timely transmission of these three messages (DC-Status 1, 2, & 4) must be maintained in order for an Battery Master to continue to be recognized and its instructions followed.
 
